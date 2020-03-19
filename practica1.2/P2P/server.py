@@ -3,7 +3,7 @@ import socket, select, pickle
 
 def broadcast_data (sock,message):
     for socket in CONNECTION_LIST: #It will go through all the active sockets and it will send the data.
-        if socket != server_socket and socket != sock :# it will not send the data to the server and itself
+        if socket != server_socket :# it will not send the data to the server and itself
             try :
                 socket.sendall(message)
             except :
@@ -15,7 +15,7 @@ def broadcast_data (sock,message):
 CONNECTION_LIST = []  #Here the id of the sockets will be saved.
 ADDRESS_USERS = [] #Here the address will be saved.
 RECV_BUFFER = 4096
-PORT = 5000
+PORT = 5001
 
 
 server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
