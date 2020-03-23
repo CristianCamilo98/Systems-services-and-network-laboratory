@@ -28,8 +28,9 @@ print("My socket listening is: [%s,%s]" %address_sockuser)
 
 prompt() 
 
+socket_list = [sys.stdin,server,user_sock]
 while True:
-    socket_list = [sys.stdin,server,user_sock]
+
     
     read_sockets, write_sockets, error_sockets = select.select(socket_list,[],[])
  #   read_sockets1, _,_ = select.select(user_sock,[],[])
@@ -42,47 +43,34 @@ while True:
                  sys.exit()
             else:
                 CONNECTION_LIST = pickle.loads(data) #Address of sock of clients listening
-                print("The connection list is: %s"%CONNECTION_LIST)
                 #CONNECTING TO THE REST OF CLIENTS
                 for n in CONNECTION_LIST: 
                     if n != address_sockuser:
                         socketn = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                         socketn.connect(n)
-                        print("connected to (%s,%s)."%n)
-                        print("With: (%s,%s)"%socketn.getsockname())
-                        print("Checking connected to (%s,%s)"%socketn.getpeername())
                         socket_list.append(socketn) 
                         SEND_SOCKS.append(socketn) #For broadcast
                 prompt()
-
         #CASE 2: USERS CONNECT TO LISTENING SOCKETS
         elif sock == user_sock:
             sockfd, addr = user_sock.accept()   
-            print("connection accepted")
             socket_list.append(sockfd)
-            print("connected to (%s,%s) with socket." %addr)
             print(sockfd.getsockname())
-
+            prompt()
 
         #CASE 3: WRITING
         elif sock == sys.stdin:   
             msg = sys.stdin.readline()
             msg ='<'+ name +'> ' + msg
             for n in SEND_SOCKS:
-                
-                    print("sending through (%s,%s)"%n.getsockname())
-                    print("To: (%s,%s)" %n.getpeername())
                     n.sendall(bytes(msg,'utf-8'))
-
-            prompt()
         #CASE 4: REACIVING DATA 
         else:
-            print("Receiving data")
             data=sock.recv(4096)
             if not data:
                 print('\nDisconnected from chat server')
-                sys.exit
+                sock.close()
+                sys.exit()
             else:
                 sys.stdout.write(data.decode('utf-8'))
-                prompt()
         
