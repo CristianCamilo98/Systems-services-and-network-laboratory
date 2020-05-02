@@ -43,6 +43,7 @@ else:
                     entradas.remove(client_sock)
                     client_sock.close()
                 else:
+                    print(data)
                     data = data.decode("utf-8") #Convertimos los bytes en string
                     data = data.split("\r\n") # Lo separamos en lineas
                     version = data[0].split()
@@ -67,6 +68,7 @@ else:
                                     content_type = "text/html"
                                 elif content_type == "jpg":
                                     content_type = "image/jpg"
+                                    connection = "close"
                                 else:
                                     content_type ="bytes"
                                 respuesta = respuesta.format(version+" "+"200 OK"," Friday, 6-May-11 15:40:00 GMT",content_type,str(file_stats.st_size),connection)
