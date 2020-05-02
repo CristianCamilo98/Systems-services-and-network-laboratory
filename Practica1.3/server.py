@@ -5,6 +5,9 @@ import time
 import threading
 import os
 import pickle
+from wsgiref.handlers import format_date_time
+from datetime import datetime
+from time import mktime
 
 args = len(sys.argv)
 BUFFER = 4096
@@ -17,10 +20,10 @@ if args != 2:
     print("Wrong, the parameter must be: <Port>")
 else:
     puerto = int(sys.argv[1])
-    if puerto <= 1023:
-        print("El puerto debe ser mayor que 1023\n")
+    if puerto <= 1024:
+        print("El puerto debe ser mayor que 1024\n")
         sys.exit()
-    print("chat server started on port "+str(puerto))
+    print("Server started on port "+str(puerto))
     my_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)  #Creacion del socket
     my_sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR,1)  #Nos permite cambiar el tamanyo del buffer 
     my_sock.bind(('',puerto))           #Asociacion del socket
@@ -30,7 +33,9 @@ else:
     while True:
         lecturas, escrituras,excepciones = select.select(entradas,salidas,errores,timeout)
         if not (lecturas or escrituras or excepciones):
-            print("Servidor inactivo")
+            now = datetime.now()
+            stamp = mktime(now.timetuple())
+            print("Servidor inactivo:",format_date_time(stamp))
         for client_sock in lecturas:
             if client_sock == my_sock:
                 sockfd, addr = my_sock.accept()
@@ -43,7 +48,8 @@ else:
                     entradas.remove(client_sock)
                     client_sock.close()
                 else:
-                    print(data)
+                    now = datetime.now()
+                    stamp = mktime(now.timetuple())
                     data = data.decode("utf-8") #Convertimos los bytes en string
                     data = data.split("\r\n") # Lo separamos en lineas
                     version = data[0].split()
@@ -71,7 +77,7 @@ else:
                                     connection = "close"
                                 else:
                                     content_type ="bytes"
-                                respuesta = respuesta.format(version+" "+"200 OK"," Friday, 6-May-11 15:40:00 GMT",content_type,str(file_stats.st_size),connection)
+                                respuesta = respuesta.format(version+" "+"200 OK",format_date_time(stamp),content_type,str(file_stats.st_size),connection)
                                 respuesta = bytes(respuesta,'utf-8')
                                 respuesta = respuesta + data
                                 client_sock.sendall(respuesta)
@@ -80,14 +86,14 @@ else:
                                     client_sock.close()
                             else:
                                 mensaje = bytes("Metodo no permitido","utf-8")
-                                respuesta = bytes(respuesta.format(version+" "+"405 Method Not allowed","Friday, 6-May-11 15:40:00 GTM","text/plain",len(mensaje),connection),"utf-8")
+                                respuesta = bytes(respuesta.format(version+" "+"405 Method Not allowed",format_date_time(stamp),"text/plain",len(mensaje),cmnnection),"utf-8")
                                 respuesta += mensaje
                                 client_sock.sendall(respuesta)
                                 entradas.remove(client_sock)
                                 
                         except FileNotFoundError:
                             mensaje =bytes("Pagina no encontrada","utf-8")
-                            respuesta =bytes(respuesta.format(version+" "+"404 Not Found"," Friday, 6-May-11 15:40:00 GMT","text/plain",len(mensaje),connection),"utf-8")
+                            respuesta =bytes(respuesta.format(version+" "+"404 Not Found",format_date_time(stamp),"text/plain",len(mensaje),connection),"utf-8")
                             respuesta += mensaje
                             client_sock.sendall(respuesta)
                             entradas.remove(client_sock)
